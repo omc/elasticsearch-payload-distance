@@ -59,11 +59,6 @@ task sourcesJar(type: Jar, dependsOn: classes) {
   classifier "sources"
 }
 
-task copyConfig(type: Copy) {
-  from "src/main/config"
-  into "build/tmp/plugin/config"
-}
-
 task copyPluginFiles(type: Copy) {
   from "src/main/templates"
   into "build/tmp/plugin"
@@ -80,7 +75,7 @@ task copyPluginFiles(type: Copy) {
   outputs.upToDateWhen { false }
 }
 
-task buildPluginZip(type: Zip, dependsOn: [":jar", "copyPluginFiles", "copyConfig"]) {
+task buildPluginZip(type: Zip, dependsOn: [":jar", "copyPluginFiles"]) {
   from configurations.releaseJars
   from "build/tmp/plugin"
   from "src/main/config"
