@@ -1,0 +1,8 @@
+repository: 
+  name: scheduled-snapshots
+snapshot:
+  interval: 1m
+  retention: 5m
+rollup: 
+  interval: 1d
+  retention: 14d
