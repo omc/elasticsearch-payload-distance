@@ -164,3 +164,10 @@ Results
 ```
 esVersion=5.4.3 gradle clean assemble
 ```
+
+#### Installation on local machine
+
+
+```
+cd /path/to/elasticsearch-5.4.3 && ./bin/elasticsearch-plugin install file:///path/to/elasticsearch-payload-distance-1.0.0_es5.4.3
+```

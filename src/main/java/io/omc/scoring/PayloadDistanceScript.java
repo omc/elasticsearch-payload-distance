@@ -13,7 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
@@ -35,7 +35,10 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 
 	protected static final Logger log = Loggers.getLogger(PayloadDistanceScript.class);
 
-	private final Stream<DistanceScoreSettings> scorers;
+	private static final double DEFAULT_MISSING_BOOST = 0.2d;
+	private static final double DEFAULT_MATCH_BOOST = 1d;
+
+	private final List<DistanceScoreSettings> scorers;
 
 	private class DistanceScoreSettings {
 
@@ -48,22 +51,39 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 		public DistanceScoreSettings(Map<String, Object> settings) {
 			field = (String) settings.get("field");
 			termValues = (Map<String, Double>) settings.get("term_values");
-			missingFactor = (double) settings.getOrDefault("term_missing_factor", 0.2f);
-			matchBoost = (double) settings.getOrDefault("term_match_boost", 1d);
+			missingFactor = (double) settings.getOrDefault("term_missing_factor", DEFAULT_MISSING_BOOST);
+			matchBoost = (double) settings.getOrDefault("term_match_boost", DEFAULT_MATCH_BOOST);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public PayloadDistanceScript(Map<String, Object> params) {
-		scorers = ((List<Map<String, Object>>) params.get("fields")).stream().map(DistanceScoreSettings::new);
+		scorers = ((List<Map<String, Object>>) params.get("fields")).stream().map(DistanceScoreSettings::new)
+		    .collect(Collectors.toList());
 	}
 
 	@Override
 	public double runAsDouble() {
 		double docScore = scoreOr(1f);
-		return scorers.mapToDouble(s -> scoreField(docScore, s)).sum();
+		double score = 0;
+		for (DistanceScoreSettings scorer : scorers) {
+			score += scoreField(docScore, scorer);
+		}
+		return score;
 	}
 
+	/**
+	 * For a given field, compute the distance between "term_values" and the fields "term_payload_values". When a term isn't part of the
+	 * field, use the term_missing_factor to weight the score. When the term is present, compute the difference, and apply the
+	 * term_match_boost factor to weight the score.
+	 *
+	 * @param docScore
+	 *          The original doc score
+	 * @param settings
+	 *          Settings discovered via parameters
+	 *
+	 * @return A distance-weighted score
+	 */
 	private double scoreField(double docScore, DistanceScoreSettings settings) {
 		double score = 0;
 		final IndexField index = this.indexLookup().get(settings.field);

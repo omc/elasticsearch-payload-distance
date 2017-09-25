@@ -177,6 +177,8 @@ task :test_search do
   curl "/items", "DELETE"
   curl "/items", "PUT", {
     settings: {
+      number_of_shards: 1,
+      number_of_replicas: 0,
       analysis: {
         analyzer: {
           payloads: {
