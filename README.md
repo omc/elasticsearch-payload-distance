@@ -21,7 +21,7 @@ curl -XPUT 'http://localhost:9200/items' -d '{
     }
   },
   "mappings": {
-    "human": {
+    "outfit": {
       "properties": {
         "simterms": {
           "type": "text",
