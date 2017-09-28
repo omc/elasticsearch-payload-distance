@@ -211,8 +211,8 @@ task :test_search do
   }
 
   curl "/items/outfit/1", "PUT", { name: "flowing dress", simterms: "a|100.0 b|100.0 c|100.0", colors: "blue|100" }
-  curl "/items/outfit/2", "PUT", { name: "blue dress", simterms: "a|200.0 b|100.0 c|50.0", colors: "green|100" }
-  curl "/items/outfit/3", "PUT", { name: "moo dress bing", simterms: "a|300.0 b|100.0 c|50.0", colors: "red|100" }
+  curl "/items/outfit/2", "PUT", { name: "green dress", simterms: "a|200.0 b|100.0 c|50.0", colors: "green|100" }
+  curl "/items/outfit/3", "PUT", { name: "dress", simterms: "a|300.0 b|100.0 c|50.0", colors: "red|100" }
   curl "/items/_refresh", "POST"
 
   query = {
@@ -229,17 +229,16 @@ task :test_search do
                 term_values: {
                   "a": 100.0,
                   "b": 100.0,
-                  "d": 100.0
+                  "c": 100.0
                 },
-                term_missing_factor: 0.2,
-                term_match_boost: 0.0005
+                boost: 1.5
               },{
                 field: "colors",
                 term_values: {
-                  "green": 100.0
+                  "green": 100.0,
+                  "blue": 18.0
                 },
-                term_missing_factor: 0.2,
-                term_match_boost: 0.0025
+                boost: 2.0
               }]
 
             }

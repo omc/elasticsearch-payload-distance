@@ -81,20 +81,18 @@ curl -XGET 'http://localhost:9200/items/_search?pretty' -d '{
               {
                 "field": "simterms",
                 "term_values": {
-                  "a": 100.0,
+                  "a": 300.0,
                   "b": 100.0,
                   "d": 100.0
                 },
-                "term_missing_factor": 0.2,
-                "term_match_boost": 0.0005
+                "boost": 2.0
               },
               {
                 "field": "colors",
                 "term_values": {
                   "green": 100.0
                 },
-                "term_missing_factor": 0.2,
-                "term_match_boost": 0.0025
+                "boost": 3.0
               }
             ]
           }

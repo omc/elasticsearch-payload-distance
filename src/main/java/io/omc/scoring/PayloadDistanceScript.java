@@ -35,8 +35,7 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 
 	protected static final Logger log = Loggers.getLogger(PayloadDistanceScript.class);
 
-	private static final double DEFAULT_MISSING_BOOST = 0.2d;
-	private static final double DEFAULT_MATCH_BOOST = 1d;
+	private static final double DEFAULT_BOOST = 1d;
 
 	private final List<DistanceScoreSettings> scorers;
 
@@ -44,15 +43,13 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 
 		final String field;
 		final Map<String, Double> termValues;
-		final double missingFactor;
-		final double matchBoost;
+		final double boost;
 
 		@SuppressWarnings("unchecked")
 		public DistanceScoreSettings(Map<String, Object> settings) {
 			field = (String) settings.get("field");
 			termValues = (Map<String, Double>) settings.get("term_values");
-			missingFactor = (double) settings.getOrDefault("term_missing_factor", DEFAULT_MISSING_BOOST);
-			matchBoost = (double) settings.getOrDefault("term_match_boost", DEFAULT_MATCH_BOOST);
+			boost = (double) settings.getOrDefault("boost", DEFAULT_BOOST);
 		}
 	}
 
@@ -64,12 +61,11 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 
 	@Override
 	public double runAsDouble() {
-		double docScore = scoreOr(1f);
 		double score = 0;
 		for (DistanceScoreSettings scorer : scorers) {
-			score += scoreField(docScore, scorer);
+			score += scoreField(scorer);
 		}
-		return score;
+		return score + scoreOr(1f);
 	}
 
 	/**
@@ -84,7 +80,7 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 	 *
 	 * @return A distance-weighted score
 	 */
-	private double scoreField(double docScore, DistanceScoreSettings settings) {
+	private double scoreField(DistanceScoreSettings settings) {
 		double score = 0;
 		final IndexField index = this.indexLookup().get(settings.field);
 
@@ -101,13 +97,11 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 			}
 
 			if (payloadValue != null) {
-				score -= docScore * (Math.abs(inputValue - payloadValue) * settings.matchBoost);
-			} else {
-				score -= docScore * settings.missingFactor;
+				score += Math.min(inputValue, payloadValue) / Math.max(inputValue, payloadValue);
 			}
 		}
 
-		return score;
+		return score * settings.boost;
 	}
 
 	private float scoreOr(float defaultValue) {
