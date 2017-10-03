@@ -36,6 +36,7 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 	protected static final Logger log = Loggers.getLogger(PayloadDistanceScript.class);
 
 	private static final double DEFAULT_BOOST = 1d;
+	private static final double DEFAULT_BURY = 0d;
 
 	private final List<DistanceScoreSettings> scorers;
 
@@ -44,12 +45,14 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 		final String field;
 		final Map<String, Double> termValues;
 		final double boost;
+		final double absentTermBury;
 
 		@SuppressWarnings("unchecked")
 		public DistanceScoreSettings(Map<String, Object> settings) {
 			field = (String) settings.get("field");
 			termValues = (Map<String, Double>) settings.get("term_values");
 			boost = (double) settings.getOrDefault("boost", DEFAULT_BOOST);
+			absentTermBury = (double) settings.getOrDefault("absent_term_bury", DEFAULT_BURY);
 		}
 	}
 
@@ -98,10 +101,12 @@ public class PayloadDistanceScript extends AbstractDoubleSearchScript {
 
 			if (payloadValue != null) {
 				score += Math.min(inputValue, payloadValue) / Math.max(inputValue, payloadValue);
+			} else {
+				score -= settings.absentTermBury;
 			}
 		}
 
-		return score * settings.boost;
+		return Math.max(0, score) * settings.boost;
 	}
 
 	private float scoreOr(float defaultValue) {

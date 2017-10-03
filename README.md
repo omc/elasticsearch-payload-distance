@@ -85,14 +85,16 @@ curl -XGET 'http://localhost:9200/items/_search?pretty' -d '{
                   "b": 100.0,
                   "d": 100.0
                 },
-                "boost": 2.0
+                "boost": 2.0,
+                "absent_term_bury": 0.1
               },
               {
                 "field": "colors",
                 "term_values": {
                   "green": 100.0
                 },
-                "boost": 3.0
+                "boost": 3.0,
+                "absent_term_bury": 0.2
               }
             ]
           }
